@@ -1,0 +1,331 @@
+1. Variables
+# int a=5; long long b=...;
+a = 5
+b = 10**18 # arbitrary-size int
+x = 3.5 # float
+flag = True # True / False
+s = "abc"
+c = 'a' # str of length 1
+MOD = 10**9 + 7 # integer
+INF = float('inf')
+a, b = b, a # swap
+a += 1 # no a++ or a--
+# 1e9+7 is float; use 10**9+7.
+# Integers use memory; floats are not exact.
+# Use straight quotes: 'abc' or "abc".
+-------------------------------------------------
+2. Input / Output
+import sys
+input = sys.stdin.readline
+n = int(input())
+a, b = map(int, input().split())
+v = list(map(int, input().split()))
+s = input().rstrip('\n') # newline only
+s = input().strip() # edge whitespace
+g = [list(map(int, input().split()))
+ for _ in range(n)]
+# Alternative: read ALL remaining input.
+data = sys.stdin.read().split()
+print(a)
+print(a, b)
+print(*v) # space-separated
+print(*v, sep="\n")
+print("YES" if ok else "NO")
+print(f"{x:.6f}") # fixed, 6 decimals
+print("\n".join(map(str, out)))
+# C++ equivalent: fixed << setprecision(6)
+# readline() includes newline, EOF gives ''.
+-------------------------------------------------
+3. Containers
+v = [] # vector
+v = [0] * n
+v = [1, 2, 3]
+g = [[0]*m for _ in range(n)]
+# NOT [[0]*m]*n: rows would be shared.
+adj = [[] for _ in range(n)]
+p = (1, 2) # tuple / pair
+x, y = p
+st = set() # unordered_set
+st = {1, 2, 3}
+mp = {} # dict, NOT set
+mp = {1: 10, 2: 20}
+from collections import Counter
+from collections import defaultdict, deque
+cnt = Counter()
+d = defaultdict(int) # default 0
+adj = defaultdict(list) # default []
+q = deque([1, 2, 3])
+stack = [] # append / pop
+import heapq
+h = [] # min-heap
+-------------------------------------------------
+4. Control flow / Functions
+if a > b:
+ pass
+elif a == b:
+ pass
+else:
+ pass
+# && / || / ! -> and / or / not
+for i in range(n): # 0 .. n-1
+ pass
+for i in range(1, n+1): # 1 .. n
+ pass
+for i in range(n-1, -1, -1):
+ pass # n-1 .. 0
+for i in range(0, n, 2):
+ pass
+for x in v:
+ pass
+for i, x in enumerate(v):
+ pass
+for x, y in zip(a, b):
+ pass # shorter length
+while cond:
+ if stop:
+ break
+ if skip:
+ continue
+ # Other work must update loop state.
+def f(a, b):
+ return a + b
+def g():
+ return 1, 2
+x, y = g()
+add = lambda a, b: a + b
+ans = x if cond else y
+def h():
+ global cnt # reassign global
+ cnt += 1
+def main():
+ pass
+main() # local vars often faster
+-------------------------------------------------
+5. List operations
+v[0] # first
+v[-1] # last
+v[1:3] # indices 1, 2
+v[::-1] # reversed copy
+len(v)
+v.append(x) # amortized O(1)
+v.pop() # last; O(1)
+v.pop(i) # worst O(n)
+v.insert(i, x) # O(n)
+v.remove(x) # first match; O(n)
+v.extend(w) # append all of w
+v + w # new concatenated list
+v.index(x) # first index; O(n)
+v.count(x) # frequency; O(n)
+x in v # membership; O(n)
+v.sort() # in-place; returns None
+v.sort(reverse=True)
+v.reverse() # in-place
+w = v[:] # shallow copy
+# Nested mutable items remain shared.
+del v[i]
+v.clear()
+sum(v)
+min(v)
+max(v)
+sq = [i*i for i in range(5)]
+ev = [x for x in v if x % 2 == 0]
+# index/remove: ValueError if not found.
+# pop/access: IndexError if invalid.
+# min/max on empty list: ValueError.
+-------------------------------------------------
+6. Basic functions / Division
+abs(-5) # 5
+min(3, 7) # 3
+max(3, 7) # 7
+sum([1, 2, 3]) # 6
+len("abc") # 3
+pow(2, 10) # 1024
+pow(2, 10, 1000) # 24; modular power
+pow(a, -1, p) # modular inverse
+# Python 3.8+; p > 1 and gcd(a,p) == 1.
+# Otherwise inverse raises ValueError.
+divmod(17, 5) # (3, 2)
+17 // 5 # 3; floor division
+17 % 5 # 2
+-7 // 2 # -4; C++ gives -3
+-7 % 3 # 2; C++ gives -1
+17 / 5 # 3.4; float
+# // floors; C++ int division truncates to 0.
+# Python remainder follows divisor's sign.
+all(v) # every item truthy
+any(v) # any item truthy
+# all([]) == True; any([]) == False
+list(range(5)) # [0,1,2,3,4]
+list(map(int, ["1", "2"])) # [1,2]
+sorted(v) # new sorted list
+list(reversed(v)) # reversed copy
+-------------------------------------------------
+7. Mathematics
+import math
+from math import gcd, lcm, isqrt
+from math import comb, factorial
+gcd(12, 18) # 6
+gcd(12, 18, 24) # 6; Python 3.9+
+lcm(4, 6) # 12; Python 3.9+
+# Older versions, for positive a,b:
+a // gcd(a, b) * b
+math.sqrt(16) # 4.0; float
+isqrt(17) # 4; exact int sqrt
+math.floor(2.7) # 2
+math.ceil(2.1) # 3
+factorial(5) # 120
+comb(5, 2) # 10; nCr
+math.log(8, 2) # 3.0
+math.log2(8)
+math.log10(100)
+math.inf
+math.pi
+(a + b - 1) // b # ceil(a/b), b > 0
+-(-a // b) # ceil(a/b), b != 0
+r = isqrt(n) # n >= 0
+r*r == n # perfect square?
+# isqrt and comb: Python 3.8+.
+# Avoid float sqrt/log for exact large ints.
+-------------------------------------------------
+8. Strings
+s[0]
+s[-1]
+s[1:3]
+s[::-1]
+len(s)
+s.split() # whitespace split
+"a,b".split(",") # ['a','b']
+" ".join(["a", "b"]) # 'a b'
+"".join(chars)
+s.strip() # edge whitespace
+s.replace("l", "L") # returns new string
+s.find("l") # index or -1
+s.count("l") # non-overlapping
+s.startswith("he")
+s.endswith("lo")
+s.lower()
+s.upper()
+s.isdigit()
+s.isalpha()
+s.islower()
+s.isupper()
+ord('c') - ord('a') # 2
+chr(ord('a') + 2) # 'c'
+# Strings are immutable: s[0]='x' fails.
+chars = list(s)
+chars[0] = 'x' # requires nonempty s
+s = "".join(chars)
+# isdigit/isalpha are Unicode-aware.
+# String methods above do not modify s.
+-------------------------------------------------
+9. Set / Dictionary
+st.add(x)
+st.remove(x) # KeyError if absent
+st.discard(x) # safe if absent
+x in st # average O(1)
+len(st) # O(1)
+a | b # union (sets)
+a & b # intersection
+a - b # difference
+a ^ b # symmetric difference
+# Sets are unordered; no lower_bound.
+sorted(st) # sorted list; O(n log n)
+d[k] = value
+d[k] # KeyError if absent
+d.get(k, 0) # default, no insertion
+k in d # checks KEYS
+del d[k] # KeyError if absent
+d.pop(k, None) # safe removal
+for k, value in d.items():
+ pass
+d.keys() # view of keys
+d.values() # view of values
+{i: i*i for i in range(3)}
+# dict: insertion order, NOT sorted key order.
+# Set/dict keys must be hashable (not lists).
+# Hash lookup: avg O(1), worst O(n).
+-------------------------------------------------
+10. Counter / defaultdict / deque
+from collections import Counter
+from collections import defaultdict, deque
+c = Counter(v)
+c[x] += 1
+c[x] -= 1
+c[missing] # 0; no key inserted
+c.most_common(1) # [(value, count)]
+del c[x]
+# Zero count does not automatically delete key.
+# Counter can store zero/negative counts.
+g = defaultdict(list)
+g[u].append(v) # missing g[u] -> []
+d = defaultdict(int)
+d[x] += 1 # missing d[x] -> 0
+# d.get(x) does NOT invoke default factory.
+q = deque()
+q.append(x) # push back; O(1)
+q.appendleft(x) # push front; O(1)
+q.pop() # pop back; O(1)
+q.popleft() # pop front; O(1)
+q[0] # front; O(1)
+q[-1] # back; O(1)
+len(q)
+if q:
+ pass # nonempty check
+# Empty pop/front/back raises IndexError.
+# deque middle indexing: O(n).
+-------------------------------------------------
+11. Sort / Heap / Binary search
+v.sort() # ascending; O(n log n)
+v.sort(reverse=True)
+v.sort(key=lambda p: p[1]) # second field
+v.sort(key=lambda p: (-p[0], p[1]))
+# Python sorting is stable.
+import heapq
+h = []
+heapq.heappush(h, x) # O(log n)
+heapq.heappop(h) # smallest; O(log n)
+h[0] # smallest; O(1)
+heapq.heapify(v) # in-place; O(n)
+# v is a heap afterwards, NOT a sorted list.
+h = [] # numeric max-heap
+heapq.heappush(h, -x)
+-heapq.heappop(h) # real maximum
+-h[0] # real maximum at top
+h = [] # tuple min-heap
+heapq.heappush(h, (dist, node))
+# Tuples compare lexicographically.
+from bisect import bisect_left, bisect_right
+bisect_left(v, x) # first index with >= x
+bisect_right(v, x) # first index with > x
+# Binary search requires ASCENDING sorted v.
+# Returns index in [0,len(v)]; O(log n).
+# bisect is NOT valid on a heap array.
+# Empty heappop / h[0]: IndexError.
+-------------------------------------------------
+12. Bit operations
+x & y # AND
+x | y # OR
+x ^ y # XOR
+~x # NOT: -x-1
+x << k # shift left
+x >> k # arithmetic shift right
+(x >> i) & 1 # check bit i
+x | (1 << i) # value with bit set
+x ^ (1 << i) # value with bit flipped
+x & ~(1 << i) # value with bit cleared
+# Assign result to x to actually update x.
+x |= 1 << i
+x ^= 1 << i
+x &= ~(1 << i)
+x & -x # lowest set bit; 0 if x=0
+x.bit_count() # Python 3.10+
+bin(x).count("1") # older Python
+# Both count bits in abs(x) for negative x.
+# Python ints have no fixed bit width.
+# Emulate a w-bit unsigned complement:
+(~x) & ((1 << w) - 1)
+# Shift counts / bit indices must be >= 0.
+for mask in range(1 << n): # n >= 0; all subsets
+ pass
+# Bit operations on large ints cost more.
+# Use nonnegative masks for usual CP tasks
