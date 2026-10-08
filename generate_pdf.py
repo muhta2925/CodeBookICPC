@@ -38,11 +38,11 @@ def get_style(filename):
         return 'text'
 
 def escape_path(path):
-    """Wrap a file path in \detokenize{} if it contains spaces or other
-    characters that LaTeX's \input cannot parse natively. minted's
-    \inputminted uses \input under the hood, so spaces in the path
-    terminate the argument. \detokenize converts the spaces to
-    \char"20 tokens which \input handles correctly."""
+    """Wrap a file path in \\detokenize{} if it contains spaces or other
+    characters that LaTeX's \\input cannot parse natively. minted's
+    \\inputminted uses \\input under the hood, so spaces in the path
+    terminate the argument. \\detokenize converts the spaces to
+    \\char\"20 tokens which \\input handles correctly."""
     if ' ' in path:
         return '\\detokenize{%s}' % path
     return path
@@ -67,9 +67,14 @@ def get_tex(sections):
     for (section_name, subsections) in sections:
         tex += '\\section{%s}\n' % texify(section_name)
         for (relative_path, subsection_name, number_of_lines, hash_value) in subsections:
-            # Scaled down header sizes: \scriptsize for title, \tiny for metadata line count & hash
-            tex += '\\subsection{\\scriptsize %s  \\tiny [%s lines] - %s}\n' % (texify(subsection_name), number_of_lines, hash_value)
+            tex += '\\subsection{\\small %s  \\scriptsize [%s lines] - %s}\n' % (texify(subsection_name), number_of_lines, hash_value)
+            # minted v3 does not strip surrounding quotes from the file
+            # argument, so the path is passed bare. Paths containing spaces
+            # are wrapped in \detokenize so LaTeX's underlying \input can
+            # parse them (it would otherwise treat the space as the end of
+            # the filename).
             tex += '\\inputminted{%s}{%s}\n' % (get_style(relative_path), escape_path(relative_path))
+        tex += '\n'
     return tex
 
 def get_env():
@@ -132,6 +137,10 @@ if __name__ == "__main__":
     print("Running LaTeX compilation...")
     
     env = get_env()
+    # nonstopmode keeps a LaTeX error from blocking the build on stdin.
+    # OUTPUT_DIRECTORY, when set, sends .aux/.log/.out/.toc and the final
+    # .pdf into a separate directory (used by the Docker compose setup
+    # to keep intermediate artifacts out of the host filesystem).
     output_directory = os.environ.get("OUTPUT_DIRECTORY")
     pdflatex_options = ["pdflatex", "-shell-escape", "-interaction=nonstopmode"]
     if output_directory:
@@ -151,3 +160,4 @@ if __name__ == "__main__":
         print("PDF generation FAILED - see notebook.log")
         raise SystemExit(status)
     print("PDF generation complete!")
+
