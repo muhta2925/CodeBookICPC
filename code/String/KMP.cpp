@@ -1,18 +1,69 @@
-vector<int> prefix_function(const string&p){
-    int m=p.size(); vector<int>f(m,0);
-    for(int i=1,j=0;i<m;i++){
-        while(j>0&&p[i]!=p[j]) j=f[j-1];
-        if(p[i]==p[j])j++;f[i]=j;
+void constructLps(str &pat, vi &lps)
+{
+ 
+    ll len = 0;
+ 
+    lps[0] = 0;
+ 
+    ll i = 1;
+    while (i < pat.length())
+    {
+ 
+        if (pat[i] == pat[len])
+        {
+            len++;
+            lps[i] = len;
+            i++;
+        }
+        else
+        {
+            if (len != 0)
+            {
+ 
+                len = lps[len - 1];
+            }
+            else
+            {
+                lps[i] = 0;
+                i++;
+            }
+        }
     }
-  return f;
 }
-vector<int> kmpSearch(const string&text,const string&pat){
-    auto f=prefix_function(pat); int m=pat.size(); vector<int>res;
-    for(int i=0,j=0;i<(int)text.size();i++){
-        while(j>0&&text[i]!=pat[j]) j=f[j-1];
-        if(text[i]==pat[j]) j++;
-        if(j==m){res.push_back(i-m+1); j=f[j-1];}
+vi search(string &pat, string &txt, vi &lps)
+{
+    ll n = txt.length();
+    ll m = pat.length();
+ 
+    // vi lps(m);
+    vi res;
+ 
+    ///  constructLps(pat, lps);
+ 
+    ll i = 0;
+    ll j = 0;
+ 
+    while (i < n)
+    {
+        if (txt[i] == pat[j])
+        {
+            i++;
+            j++;
+ 
+            if (j == m)
+            {
+                res.push_back(i - j);
+                j = lps[j - 1];
+            }
+        }
+ 
+        else
+        {
+            if (j != 0)
+                j = lps[j - 1];
+            else
+                i++;
+        }
     }
     return res;
 }
-// Period of s: len-f[len-1] (divides len)

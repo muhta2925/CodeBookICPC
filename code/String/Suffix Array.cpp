@@ -1,177 +1,168 @@
 struct SuffixArray {
-	// p suffix array 1 base, 0 index for dollar
-	// rank will show 1 index value
-	// 0 base suffix array -> suf[rank[i] - 1] = i
-	vector<int> p, c, rank, lcp;
-	vector<vector<int>> st;
-	SuffixArray(string const& s) {
-		build_suffix(s + char(1));
-		build_rank(p.size());
-		build_lcp(s + char(1));
-		build_sparse_table(lcp.size());
-	}
-	void build_suffix(string const& s) {
-		int n = s.size();
-		const int MX_ASCII = 256;
-		vector<int> cnt(max(MX_ASCII, n), 0);
-		p.resize(n); c.resize(n);
-		for (int i = 0; i < n; i++) cnt[s[i]]++;
-		for (int i=1; i<MX_ASCII; i++) cnt[i]+=cnt[i-1];
-		for (int i = 0; i < n; i++) p[--cnt[s[i]]] = i;
-		c[p[0]] = 0;
-		int classes = 1;
-		for (int i = 1; i < n; i++) {
-			if (s[p[i]] != s[p[i-1]]) classes++;
-			c[p[i]] = classes - 1;
-		}
-		vector<int> pn(n), cn(n);
-		for (int h = 0; (1 << h) < n; ++h) {
-			for (int i = 0; i < n; i++) {
-				pn[i] = p[i] - (1 << h);
-				if (pn[i] < 0) pn[i] += n;
-			}
-			fill(cnt.begin(), cnt.begin() + classes, 0);
-			for (int i = 0; i < n; i++) cnt[c[pn[i]]]++;
-			for (int i=1; i<classes; i++) cnt[i]+=cnt[i-1];
-			for (int i=n-1;i>=0;i--) p[--cnt[c[pn[i]]]]=pn[i];
-			cn[p[0]] = 0; classes = 1;
-			for (int i = 1; i < n; i++) {
-				pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};
-				pair<int, int> prev = {c[p[i-1]], c[(p[i-1] + (1 << h)) % n]};
-				if (cur != prev) ++classes;
-				cn[p[i]] = classes - 1;
-			}
-			c.swap(cn);
-		}
-	}
-	void build_rank(int n) {
-		rank.resize(n, 0);
-		for (int i = 0; i < n; i++) rank[p[i]] = i;
-	}
-	void build_lcp(string const& s) {
-		int n = s.size(), k = 0;
-		lcp.resize(n - 1, 0);
-		for (int i = 0; i < n; i++) {
-			if (rank[i] == n - 1) {
-				k = 0;
-				continue;
-			}
-			int j = p[rank[i] + 1];
-			while (i + k < n && j + k < n && s[i+k] == s[j+k])
-				k++;
-			lcp[rank[i]] = k;
-			if (k) k--;
-		}
-	}
-	void build_sparse_table(int n) {
-		int lim = __lg(n);
-		st.resize(lim + 1, vector<int>(n)); st[0] = lcp;
-		for (int k = 1; k <= lim; k++)
-			for (int i = 0; i + (1 << k) <= n; i++)
-				st[k][i] = min(st[k - 1][i], st[k - 1][i + (1 << (k - 1))]);
-	}
-	int get_lcp(int i) { return lcp[i]; }
-	int get_lcp(int i, int j) {
-		if (j < i) swap(i, j);
-		j--; /*for lcp from i to j we don't need last lcp*/
-		int K = __lg(j - i + 1);
-		return min(st[K][i], st[K][j - (1 << K) + 1]);
-	}
-	// Compare two substrings (l1, r1) and (l2, r2)
-	int compare(int l1, int r1, int l2, int r2) {
-		int len1 = r1 - l1 + 1;
-		int len2 = r2 - l2 + 1;
-		int pos1 = rank[l1];
-		int pos2 = rank[l2];
-		if (pos1 == pos2) {
-			if (len1 != len2) return len1 < len2 ? -1 : 1;
-			return 0;
-		}
-		int common = get_lcp(min(pos1, pos2), max(pos1, pos2));
-		int compare_len = min(min(len1, len2), common);
-		if (compare_len == len1 && compare_len == len2) return 0;
-		if (compare_len == len1) return -1;
-		if (compare_len == len2) return 1;
-		return pos1 < pos2 ? -1 : 1;
-	}
+    vector<int> suffix_indices, suffix_rank, lcp;
+    vector<vector<int>> sparse_table;
+
+    SuffixArray(const string &s) {
+        build(s);
+    }
+
+    // suffix_indices[i] = start of ith smallest suffix
+    void build(const string &s) {
+        suffix_indices.clear();
+        suffix_rank.clear();
+        lcp.clear();
+        sparse_table.clear();
+
+        int n = s.size();
+        if (n == 0) return;
+
+        string t = s + char(0);
+        int m = t.size();
+
+        vector<int> suffix_class(m), new_class(m);
+        vector<int> new_indices(m), cnt(max(256, m), 0);
+        suffix_indices.resize(m);
+
+        for (unsigned char ch : t) cnt[ch]++;
+        for (int i = 1; i < 256; i++)
+            cnt[i] += cnt[i - 1];
+
+        for (int i = 0; i < m; i++)
+            suffix_indices[--cnt[(unsigned char)t[i]]] = i;
+
+        suffix_class[suffix_indices[0]] = 0;
+        int classes = 1;
+
+        for (int i = 1; i < m; i++) {
+            if (t[suffix_indices[i]] != t[suffix_indices[i - 1]])
+                classes++;
+            suffix_class[suffix_indices[i]] = classes - 1;
+        }
+
+        for (int h = 0; (1LL << h) < m; h++) {
+            int len = 1 << h;
+
+            for (int i = 0; i < m; i++) {
+                new_indices[i] = suffix_indices[i] - len;
+                if (new_indices[i] < 0)
+                    new_indices[i] += m;
+            }
+
+            fill(cnt.begin(), cnt.begin() + classes, 0);
+
+            for (int i = 0; i < m; i++)
+                cnt[suffix_class[new_indices[i]]]++;
+
+            for (int i = 1; i < classes; i++)
+                cnt[i] += cnt[i - 1];
+
+            for (int i = m - 1; i >= 0; i--)
+                suffix_indices[--cnt[suffix_class[new_indices[i]]]]
+                    = new_indices[i];
+
+            new_class[suffix_indices[0]] = 0;
+            classes = 1;
+
+            for (int i = 1; i < m; i++) {
+                pair<int, int> cur = {
+                    suffix_class[suffix_indices[i]],
+                    suffix_class[(suffix_indices[i] + len) % m]
+                };
+
+                pair<int, int> prev = {
+                    suffix_class[suffix_indices[i - 1]],
+                    suffix_class[(suffix_indices[i - 1] + len) % m]
+                };
+
+                if (cur != prev) classes++;
+                new_class[suffix_indices[i]] = classes - 1;
+            }
+
+            suffix_class.swap(new_class);
+        }
+
+        suffix_indices.erase(suffix_indices.begin());
+
+        suffix_rank.resize(n);
+        for (int i = 0; i < n; i++)
+            suffix_rank[suffix_indices[i]] = i;
+
+        build_lcp(s);
+    }
+
+    // lcp[i] = LCP of suffix_indices[i] and [i+1]
+    void build_lcp(const string &s) {
+        int n = s.size(), k = 0;
+        lcp.assign(max(0, n - 1), 0);
+
+        for (int i = 0; i < n; i++) {
+            if (suffix_rank[i] == n - 1) {
+                k = 0;
+                continue;
+            }
+
+            int j = suffix_indices[suffix_rank[i] + 1];
+
+            while (i + k < n && j + k < n &&
+                   s[i + k] == s[j + k])
+                k++;
+
+            lcp[suffix_rank[i]] = k;
+            if (k) k--;
+        }
+    }
+
+    // Call before get_lcp() or compare()
+    void build_sparse_table() {
+        int n = lcp.size();
+        sparse_table.clear();
+        if (n == 0) return;
+
+        int levels = __lg(n) + 1;
+        sparse_table.assign(levels, vector<int>(n));
+        sparse_table[0] = lcp;
+
+        for (int k = 1; k < levels; k++) {
+            for (int i = 0; i + (1 << k) <= n; i++) {
+                sparse_table[k][i] = min(
+                    sparse_table[k - 1][i],
+                    sparse_table[k - 1][i + (1 << (k - 1))]
+                );
+            }
+        }
+    }
+
+    // LCP of suffixes starting at indices i and j
+    int get_lcp(int i, int j) {
+        int n = suffix_indices.size();
+        if (i == j) return n - i;
+
+        int left = suffix_rank[i];
+        int right = suffix_rank[j];
+        if (left > right) swap(left, right);
+
+        int k = __lg(right - left);
+        return min(
+            sparse_table[k][left],
+            sparse_table[k][right - (1 << k)]
+        );
+    }
+
+    // Compare s[l1..r1] and s[l2..r2]
+    // Returns -1 (smaller), 0 (equal), 1 (greater)
+    int compare(int l1, int r1, int l2, int r2) {
+        int len1 = r1 - l1 + 1;
+        int len2 = r2 - l2 + 1;
+
+        int common = min({
+            get_lcp(l1, l2), len1, len2
+        });
+
+        if (common == min(len1, len2)) {
+            if (len1 == len2) return 0;
+            return len1 < len2 ? -1 : 1;
+        }
+
+        return suffix_rank[l1] < suffix_rank[l2] ? -1 : 1;
+    }
 };
-// s.compare(suf[mid], min(n - suf[mid], m), t) -> -1(small), 0(equal), 1(large)
-
-// https://cses.fi/problemset/task/2109/
-// You are given a string of length n. If all of its substrings (not necessarily distinct) are ordered lexicographically, what is the kth smallest of them?
-
-void solve() {
-	string s;
-	cin >> s;
-	int k, n = s.size();
-	cin >> k;
-	SuffixArray suff(s);
-	vector<int> sa(n), pref(n);
-	for (int i = 0; i < n; i++) {
-		sa[suff.rank[i] - 1] = i;
-	}
-	pref[0] = n - sa[0];
-	for (int i = 1; i < n; i++) {
-		pref[i] = pref[i - 1] + n - sa[i];
-	}
-
-	auto get_string = [&](int l, int r) {
-		int sum = pref[r];
-		if (l - 1 >= 0) sum -= pref[l - 1];
-		return sum;
-	};
-
-	int L = 0, R = n - 1;
-	int depth = 0;
-	while (true) {
-		if (depth > 0) {
-			int count = R - L + 1;
-			if (k <= count) {
-				cout << s.substr(sa[L], depth) << '\n';
-				return;
-			}
-			k -= count;
-		}
-		int cur = L;
-		// skip all suffixes which are already ended
-		while (cur <= R && sa[cur] + depth >= n) cur++;
-		assert(cur <= R);
-		
-		while (cur <= R) {
-			// extend to next level with a character c
-			// cur = starting index of current character branch
-			// cur_end = ending index of current character branch
-			// binary search to find cur_end
-			char c = s[sa[cur] + depth];
-			int low = cur, high = R, cur_end = cur;
-			while (low <= high) {
-				int mid = (low + high) / 2;
-				if (sa[mid] + depth < n && s[sa[mid] + depth] == c) {
-					cur_end = mid;
-					low = mid + 1;
-				} else if (sa[mid] + depth >= n) {
-					low = mid + 1;
-				} else {
-					high = mid - 1;
-				}
-			}
-			
-			int total = get_string(cur, cur_end);
-			int branch = total - (cur_end - cur + 1) * depth;
-
-			if (k <= branch) {
-				// search in this branch
-				L = cur;
-				R = cur_end;
-				depth++;
-				goto next_level;
-			} else {
-				// search in next branch
-				k -= branch;
-				cur = cur_end + 1;
-			}
-		}
-
-next_level:;
-	}
-}
